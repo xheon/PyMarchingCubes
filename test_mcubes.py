@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 
-import mcubes
+import marching_cubes as mcubes
 
 
 def test_empty():

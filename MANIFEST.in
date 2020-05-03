@@ -1,10 +1,10 @@
-include mcubes/*.py
-exclude mcubes/numpy_smoothing.py
+include marching_cubes/*.py
+exclude marching_cubes/numpy_smoothing.py
 
-include mcubes/src/*.h
-include mcubes/src/*.cpp
-include mcubes/src/_mcubes.pyx
-exclude mcubes/src/_mcubes.cpp
+include marching_cubes/src/*.h
+include marching_cubes/src/*.cpp
+include marching_cubes/src/_mcubes.pyx
+exclude marching_cubes/src/_mcubes.cpp
 
 include examples/*.py
 include images/binary.jpg

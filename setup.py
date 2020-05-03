@@ -59,12 +59,11 @@ def extensions():
     return cythonize([mcubes_module])
 
 setup(
-    name="PyMCubes",
-    version="0.1.0",
+    name="PyMarchingCubes",
+    version="0.0.1",
     description="Marching cubes for Python",
-    author="Pablo Márquez Neila",
-    author_email="pablo.marquez@artorg.unibe.ch",
-    url="https://github.com/pmneila/PyMCubes",
+    author="Justus Thies (PyMCubes: Pablo Márquez Neila)",
+    url="https://github.com/JustusThies/PyMarchingCubes",
     license="BSD 3-clause",
     long_description="""
     Marching cubes for Python
@@ -82,7 +81,7 @@ setup(
         "Topic :: Multimedia :: Graphics :: 3D Modeling",
         "Topic :: Scientific/Engineering :: Image Recognition",
     ],
-    packages=["mcubes"],
+    packages=["marching_cubes"],
     ext_modules=lazy_cythonize(extensions),
     requires=['numpy', 'Cython', 'PyCollada'],
     setup_requires=['numpy', 'Cython']

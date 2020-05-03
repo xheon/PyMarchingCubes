@@ -1,6 +1,6 @@
 
 import numpy as np
-import mcubes
+import marching_cubes as mcubes
 
 print("Example 1: Isosurface in NumPy volume...")
 

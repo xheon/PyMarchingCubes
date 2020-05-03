@@ -4,7 +4,7 @@ import pytest
 
 import numpy as np
 
-import mcubes
+import marching_cubes as mcubes
 
 
 def test_sphere():

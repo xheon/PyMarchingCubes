@@ -1,20 +1,25 @@
-# PyMCubes
+# PyMarchingCubes
 
-`PyMCubes` is an implementation of the marching cubes algorithm to extract
-iso-surfaces from volumetric data. The volumetric data can be given as a
-three-dimensional `NumPy` array or as a Python function ``f(x, y, z)``.
+`PyMarchingCubes` is a fork from `PyMCubes`, with a different implementation of the actual marching function (see 'marching_cubes/src/marchingcubes.h').
+It fixes some issues of the original implementation that let to wrong triangulation (visible in triangles that are larger than the actual 'marching cell').
 
-`PyMCubes` also provides functions to export the results of the marching cubes
-in a number of mesh file formats.
+![Mesh of PyMCubes and PyMarchingCubes](images/comparison.jpeg "Marching cubes using PyMCubes and PyMarchingCubes")
+
+Other than this function, this repository is the same as the original (https://github.com/pmneila/PyMCubes).
+
 
 ## Installation
 
-Use `pip`:
 ```
-$ pip install --upgrade PyMCubes
+git clone https://github.com/JustusThies/PyMarchingCubes.git
+cd PyMarchingCubes
+git clone https://gitlab.com/libeigen/eigen.git
+python setup.py install
 ```
 
-## Example
+
+
+## Example from the original `PyMCubes`
 
 The following example creates a `NumPy` volume with spherical iso-surfaces and
 extracts one of them (i.e., a sphere) with `mcubes.marching_cubes`. The result
@@ -22,7 +27,7 @@ is exported to `sphere.dae`:
 
 ```Python
   >>> import numpy as np
-  >>> import mcubes
+  >>> import marching_cubes as mcubes
 
   # Create a data volume (30 x 30 x 30)
   >>> X, Y, Z = np.mgrid[:30, :30, :30]
@@ -40,7 +45,7 @@ a `NumPy` array:
 
 ```Python
   >>> import numpy as np
-  >>> import mcubes
+  >>> import marching_cubes as mcubes
 
   # Create the volume
   >>> f = lambda x, y, z: x**2 + y**2 + z**2

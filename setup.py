@@ -39,20 +39,20 @@ def extensions():
     numpy_include_dir = numpy.get_include()
 
     mcubes_module = Extension(
-        "mcubes._mcubes",
+        "marching_cubes._mcubes",
         [
-            "mcubes/src/_mcubes.pyx",
-            "mcubes/src/pywrapper.cpp",
-            "mcubes/src/marchingcubes.cpp"
+            "marching_cubes/src/_mcubes.pyx",
+            "marching_cubes/src/pywrapper.cpp",
+            "marching_cubes/src/marchingcubes.cpp"
         ],
         language="c++",
         extra_compile_args=['-std=c++11', '-Wall'],
         include_dirs=[numpy_include_dir],
         depends=[
-            "mcubes/src/marchingcubes.h",
-            "mcubes/src/pyarray_symbol.h",
-            "mcubes/src/pyarraymodule.h",
-            "mcubes/src/pywrapper.h"
+            "marching_cubes/src/marchingcubes.h",
+            "marching_cubes/src/pyarray_symbol.h",
+            "marching_cubes/src/pyarraymodule.h",
+            "marching_cubes/src/pywrapper.h"
         ],
     )
 

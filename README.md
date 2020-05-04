@@ -5,8 +5,12 @@ It fixes some issues of the original implementation that let to wrong triangulat
 
 ![Mesh of PyMCubes and PyMarchingCubes](images/comparison.jpeg "Marching cubes using PyMCubes and PyMarchingCubes")
 
-Other than this function, this repository is the same as the original (https://github.com/pmneila/PyMCubes).
+The module also includes a marching cubes with color interpolation:
+``` marching_cubes_color ``` and ``` marching_cubes_color_func ```.
+Have a look at the 'examples/spheres.py' file.
+Basically, it is called with ``` marching_cubes_color(sdf_volume, rgb_volume, iso_level) ``` assuming a 3D grid for the sdf values (dim_x,dim_y,dim_z) and a 4D grid for the colors (dim_x,dim_y,dim_z,3).
 
+Other than that, this repository is the same as the original (https://github.com/pmneila/PyMCubes).
 
 ## Installation
 

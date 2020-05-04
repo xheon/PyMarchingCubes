@@ -9,6 +9,7 @@
 #include <functional>
 #include "../../eigen/Eigen/Eigen" // git clone https://gitlab.com/libeigen/eigen.git
 
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
 
 namespace mc
 {
@@ -34,6 +35,12 @@ struct MC_Triangle {
 struct MC_Gridcell {
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	Eigen::Vector3d p[8];
+	double val[8];
+};
+
+struct MC_Gridcell_Color {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	Vector6d p[8];
 	double val[8];
 };
 
@@ -492,6 +499,291 @@ void marching_cubes(const vector3& lower, const vector3& upper,
     #endif
     
 }
+
+
+
+
+/////////////////////////////
+/////////////////////////////
+//////////   COLOR //////////
+/////////////////////////////
+/////////////////////////////
+
+
+
+template<typename vector3, typename formula_sdf, typename formula_color>
+void marching_cubes_color(const vector3& lower, const vector3& upper,
+    int numx, int numy, int numz, formula_sdf f_sdf, formula_color f_color, double isovalue,
+    std::vector<double>& vertices, std::vector<typename vector3::size_type>& polygons)
+{
+    using coord_type = typename vector3::value_type;
+    using size_type = typename vector3::size_type;
+    using namespace private_;
+
+    // Some initial checks
+    if(numx < 2 || numy < 2 || numz < 2)
+        return;
+    
+    if(!std::equal(std::begin(lower), std::end(lower), std::begin(upper),
+                   [](double a, double b)->bool {return a <= b;}))
+        return;
+ 
+    
+    double dx = (upper[0] - lower[0]) / (numx - 1.0);
+    double dy = (upper[1] - lower[1]) / (numy - 1.0);
+    double dz = (upper[2] - lower[2]) / (numz - 1.0);
+
+    auto coord_mapper = [&](int x, int y, int z) { return Eigen::Vector3d( lower[0] + x * dx, lower[1] + y * dy, lower[2] + z * dz ); }; 
+    //auto push_vertex = [&] (Eigen::Vector3d xyz) {int id = vertices.size()/3; vertices.push_back(xyz.x()); vertices.push_back(xyz.y()); vertices.push_back(xyz.z()); return id;};
+    auto push_vertex = [&] (const Vector6d& xyz_rgb)
+                                {
+                                    int id = vertices.size()/6;
+                                    for(unsigned int i=0; i<6; ++i) vertices.push_back(xyz_rgb[i]);
+                                    return id;
+                                };
+
+    // vertex zero crossing interpolation
+	//       f(p2) = valp2
+	//       x
+	//      /
+	//     x f(p) = isolevel
+	//    /
+	//   /
+	//  /
+	// x
+	// f(p1) = valp1
+    auto VertexInterp = [&](double isolevel, const Vector6d& p1, const Vector6d& p2, double valp1, double valp2)
+                                {
+                                    double alpha = (valp2 - isolevel) / (valp2 - valp1);
+                                    return alpha*p1 + (1 - alpha)*p2;
+                                };
+
+    // store intersections of old z plane to avoid duplicated vertices
+    int* edge_intersections_old_x = new int[(numx-1) * numy];
+    int* edge_intersections_old_y = new int[numx * (numy-1)];
+    int* edge_intersections_current_x = new int[(numx-1) * numy];
+    int* edge_intersections_current_y = new int[numx * (numy-1)];
+
+    // store intersections within the z-planes to avoid duplicated vertices
+    int* edge_intersections_current_z = new int[numx * numy];
+
+    for (int z = 0; z < numz - 1; z++)
+	{
+        // swap index storage
+        std::swap(edge_intersections_old_x, edge_intersections_current_x); // old = current
+        std::swap(edge_intersections_old_y, edge_intersections_current_y);
+        std::fill_n(edge_intersections_current_x, (numx-1) * numy, -1); // invalidate
+        std::fill_n(edge_intersections_current_y, (numy-1) * numx, -1); // invalidate
+
+        std::fill_n(edge_intersections_current_z, numy * numx, -1); // invalidate
+
+		for (int y = 0; y < numy - 1; y++)
+		{
+            for (int x = 0; x < numx - 1; x++)
+			{
+                // Process Volume Cell
+                MC_Gridcell_Color cell;
+                //
+                //    4---5
+                //   /   /|
+                //  0---1 6
+                //  |   |/
+                //  3---2
+                // cell corners
+                cell.p[0].block<3,1>(0,0) = coord_mapper(x + 1, y, z);
+                cell.p[1].block<3,1>(0,0) = coord_mapper(x, y, z);
+                cell.p[2].block<3,1>(0,0) = coord_mapper(x, y + 1, z);
+                cell.p[3].block<3,1>(0,0) = coord_mapper(x + 1, y + 1, z);
+                cell.p[4].block<3,1>(0,0) = coord_mapper(x + 1, y, z + 1);
+                cell.p[5].block<3,1>(0,0) = coord_mapper(x, y, z + 1);
+                cell.p[6].block<3,1>(0,0) = coord_mapper(x, y + 1, z + 1);
+                cell.p[7].block<3,1>(0,0) = coord_mapper(x + 1, y + 1, z + 1);
+
+                // cell colors
+                cell.p[0].block<3,1>(3,0) = f_color(x + 1, y, z);
+                cell.p[1].block<3,1>(3,0) = f_color(x, y, z);
+                cell.p[2].block<3,1>(3,0) = f_color(x, y + 1, z);
+                cell.p[3].block<3,1>(3,0) = f_color(x + 1, y + 1, z);
+                cell.p[4].block<3,1>(3,0) = f_color(x + 1, y, z + 1);
+                cell.p[5].block<3,1>(3,0) = f_color(x, y, z + 1);
+                cell.p[6].block<3,1>(3,0) = f_color(x, y + 1, z + 1);
+                cell.p[7].block<3,1>(3,0) = f_color(x + 1, y + 1, z + 1);
+
+                // cell corner values
+                cell.val[0] = (double)f_sdf(x + 1, y, z);
+                cell.val[1] = (double)f_sdf(x, y, z);
+                cell.val[2] = (double)f_sdf(x, y + 1, z);
+                cell.val[3] = (double)f_sdf(x + 1, y + 1, z);
+                cell.val[4] = (double)f_sdf(x + 1, y, z + 1);
+                cell.val[5] = (double)f_sdf(x, y, z + 1);
+                cell.val[6] = (double)f_sdf(x, y + 1, z + 1);
+                cell.val[7] = (double)f_sdf(x + 1, y + 1, z + 1);
+
+                // triangulation code
+	            int cubeindex = 0;
+                if (cell.val[0] < isovalue) cubeindex |= 1;
+                if (cell.val[1] < isovalue) cubeindex |= 2;
+                if (cell.val[2] < isovalue) cubeindex |= 4;
+                if (cell.val[3] < isovalue) cubeindex |= 8;
+                if (cell.val[4] < isovalue) cubeindex |= 16;
+                if (cell.val[5] < isovalue) cubeindex |= 32;
+                if (cell.val[6] < isovalue) cubeindex |= 64;
+                if (cell.val[7] < isovalue) cubeindex |= 128;
+
+	            // Cube is entirely in/out of the surface
+	            if (edge_table[cubeindex] == 0) continue;
+
+
+                /* Find the vertices where the surface intersects the cube */
+                int vertlist[12];
+                { // edges on the old z plane
+                    if (edge_table[cubeindex] & 1) // edge in x at y
+                    {
+                        if(z==0) vertlist[0] = push_vertex(VertexInterp(isovalue, cell.p[0], cell.p[1], cell.val[0], cell.val[1]));
+                        else vertlist[0] = edge_intersections_old_x[y * (numx-1) + x];
+                    }
+                    if (edge_table[cubeindex] & 2) // edge in y at x
+                    {
+                        if(z==0) vertlist[1] = push_vertex(VertexInterp(isovalue, cell.p[1], cell.p[2], cell.val[1], cell.val[2]));
+                        else vertlist[1] = edge_intersections_old_y[x * (numy-1) + y];
+                    }
+                    if (edge_table[cubeindex] & 4) // edge in x at y+1
+                    {
+                        if(z==0) vertlist[2] = push_vertex(VertexInterp(isovalue, cell.p[2], cell.p[3], cell.val[2], cell.val[3]));
+                        else vertlist[2] = edge_intersections_old_x[(y+1) * (numx-1) + x];
+                    }
+                    if (edge_table[cubeindex] & 8) // edge in y at x+1
+                    {
+                        if(z==0) vertlist[3] = push_vertex(VertexInterp(isovalue, cell.p[3], cell.p[0], cell.val[3], cell.val[0]));
+                        else vertlist[3] = edge_intersections_old_y[(x+1) * (numy-1) + y];
+                    }
+                }
+
+                { // edges on the new z plane
+                    if (edge_table[cubeindex] & 16) // edge in x at y
+                    {
+                        if (edge_intersections_current_x[y * (numx-1) + x] == -1) // check if already assigned
+                        {
+                            vertlist[4] = push_vertex(VertexInterp(isovalue, cell.p[4], cell.p[5], cell.val[4], cell.val[5]));
+                            edge_intersections_current_x[y * (numx-1) + x] = vertlist[4];
+                        }
+                        else
+                        {
+                            vertlist[4] = edge_intersections_current_x[y * (numx-1) + x];
+                        }
+                    }
+                    if (edge_table[cubeindex] & 32) // edge in y at x
+                    {
+                        if(edge_intersections_current_y[x * (numy-1) + y] == -1)
+                        {
+                            vertlist[5] = push_vertex(VertexInterp(isovalue, cell.p[5], cell.p[6], cell.val[5], cell.val[6]));
+                            edge_intersections_current_y[x * (numy-1) + y] = vertlist[5];
+                        }
+                        else
+                        {
+                            vertlist[5] = edge_intersections_current_y[x * (numy-1) + y];
+                        }                        
+                    }
+                    if (edge_table[cubeindex] & 64) // edge in x at y+1
+                    {
+                        if (edge_intersections_current_x[(y+1) * (numx-1) + x] == -1)
+                        {
+                            vertlist[6] = push_vertex(VertexInterp(isovalue, cell.p[6], cell.p[7], cell.val[6], cell.val[7]));
+                            edge_intersections_current_x[(y+1) * (numx-1) + x] = vertlist[6];
+                        }
+                        else
+                        {
+                            vertlist[6] = edge_intersections_current_x[(y+1) * (numx-1) + x];
+                        }                        
+                    }
+                    if (edge_table[cubeindex] & 128) // edge in y at x+1
+                    {
+                        if (edge_intersections_current_y[(x+1) * (numy-1) + y] == -1)
+                        {
+                            vertlist[7] = push_vertex(VertexInterp(isovalue, cell.p[7], cell.p[4], cell.val[7], cell.val[4]));
+                            edge_intersections_current_y[(x+1) * (numy-1) + y] = vertlist[7];
+                        }
+                        else
+                        {
+                            vertlist[7] = edge_intersections_current_y[(x+1) * (numy-1) + y];
+                        }                        
+                    }
+                }
+
+                { // between the z planes
+                    if (edge_table[cubeindex] & 256) // 0 -- 4,  x + 1, y
+                    {
+                        if (edge_intersections_current_z[y * numx + (x+1)] == -1)                    
+                        {                     
+                            vertlist[8] = push_vertex(VertexInterp(isovalue, cell.p[0], cell.p[4], cell.val[0], cell.val[4]));
+                            edge_intersections_current_z[y * numx + (x+1)] = vertlist[8];
+                        }
+                        else
+                        {
+                            vertlist[8] = edge_intersections_current_z[y * numx + (x+1)];
+                        }
+                    }
+                    if (edge_table[cubeindex] & 512) // 1 -- 5,  x, y
+                    {
+                        if (edge_intersections_current_z[y * numx + x] == -1)                    
+                        { 
+                            vertlist[9] = push_vertex(VertexInterp(isovalue, cell.p[1], cell.p[5], cell.val[1], cell.val[5]));
+                            edge_intersections_current_z[y * numx + x] = vertlist[9];
+                        }
+                        else
+                        {
+                            vertlist[9] = edge_intersections_current_z[y * numx + x];
+                        }
+                    }
+                    if (edge_table[cubeindex] & 1024) // 2 -- 6,  x, y + 1
+                    {
+                        if (edge_intersections_current_z[(y+1) * numx + x] == -1)                    
+                        { 
+                            vertlist[10] = push_vertex(VertexInterp(isovalue, cell.p[2], cell.p[6], cell.val[2], cell.val[6]));
+                            edge_intersections_current_z[(y+1) * numx + x] = vertlist[10];
+                        }
+                        else
+                        {
+                            vertlist[10] = edge_intersections_current_z[(y+1) * numx + x];
+                        }
+                    }
+                    if (edge_table[cubeindex] & 2048) // 3 -- 7,  x + 1, y + 1
+                    {
+                        if (edge_intersections_current_z[(y+1) * numx + (x+1)] == -1)                    
+                        { 
+                            vertlist[11] = push_vertex(VertexInterp(isovalue, cell.p[3], cell.p[7], cell.val[3], cell.val[7]));
+                            edge_intersections_current_z[(y+1) * numx + (x+1)] = vertlist[11];
+                        }
+                        else
+                        {
+                            vertlist[11] = edge_intersections_current_z[(y+1) * numx + (x+1)];
+                        }
+                    }
+                }
+
+                // push face indices
+                for (int i = 0; triangle_table[cubeindex][i] != -1; ++i)
+                    polygons.push_back(vertlist[triangle_table[cubeindex][i]]);
+
+			}
+		}
+	}
+
+
+    delete[] edge_intersections_old_x;
+    delete[] edge_intersections_old_y;
+    delete[] edge_intersections_current_x;
+    delete[] edge_intersections_current_y;
+    delete[] edge_intersections_current_z;
+    
+}
+
+
+
+
+
+
+
 
 }
 

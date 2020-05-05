@@ -19,7 +19,8 @@ mcubes.export_obj(vertices, triangles, "sphere.obj")
 print("Example 2: Isosurface and color in NumPy volume...")
 
 # Extract isosurface and color
-color = 0.01 * np.concatenate((X[:,:,:,None],X[:,:,:,None],X[:,:,:,None]), axis=3) # color array (grayscale gradient in this example)
+#color = 0.01 * np.concatenate((X[:,:,:,None],X[:,:,:,None],X[:,:,:,None]), axis=3) # color array (grayscale gradient in this example)
+color = 0.01 * np.concatenate((X[:,:,:,None],Y[:,:,:,None],Z[:,:,:,None]), axis=3) # color array (positions as color)
 vertices_color, triangles_color = mcubes.marching_cubes_color(sdf, color, 0)
 mcubes.export_obj(vertices_color, triangles_color, "sphere_color.obj")
 mcubes.export_off(vertices_color, triangles_color, "sphere_color.off")

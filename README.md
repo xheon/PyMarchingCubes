@@ -9,6 +9,9 @@ The module also includes a marching cubes with color interpolation:
 ``` marching_cubes_color ``` and ``` marching_cubes_color_func ```.
 Have a look at the 'examples/spheres.py' file.
 Basically, it is called with ``` marching_cubes_color(sdf_volume, rgb_volume, iso_level) ``` assuming a 3D grid for the sdf values (dim_x,dim_y,dim_z) and a 4D grid for the colors (dim_x,dim_y,dim_z,3).
+![PyMarchingCubes Color Interpolation](images/mc_colors.jpg "Marching cubes with color interpolation.")
+
+The export functions for obj and off files are adapted accordingly to handle the vertex colors.
 
 Other than that, this repository is the same as the original (https://github.com/pmneila/PyMCubes).
 

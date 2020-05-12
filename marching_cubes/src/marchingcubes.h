@@ -525,7 +525,7 @@ void marching_cubes(const vector3& lower, const vector3& upper,
 
 template<typename vector3, typename formula_sdf, typename formula_color>
 void marching_cubes_color(const vector3& lower, const vector3& upper,
-    int numx, int numy, int numz, formula_sdf f_sdf, formula_color f_color, double isovalue,
+    int numx, int numy, int numz, formula_sdf f_sdf, formula_color f_color, double isovalue, double truncation,
     std::vector<double>& vertices, std::vector<typename vector3::size_type>& polygons)
 {
     using coord_type = typename vector3::value_type;
@@ -632,7 +632,7 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
                 cell.val[7] = (double)f_sdf(x + 1, y + 1, z + 1);
 
                 // triangulation code
-	            int cubeindex = 0;
+	    	int cubeindex = 0;
                 if (cell.val[0] < isovalue) cubeindex |= 1;
                 if (cell.val[1] < isovalue) cubeindex |= 2;
                 if (cell.val[2] < isovalue) cubeindex |= 4;
@@ -642,8 +642,8 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
                 if (cell.val[6] < isovalue) cubeindex |= 64;
                 if (cell.val[7] < isovalue) cubeindex |= 128;
 
-	            // Cube is entirely in/out of the surface
-	            if (edge_table[cubeindex] == 0) continue;
+	    	// Cube is entirely in/out of the surface
+	    	if (edge_table[cubeindex] == 0) continue;
 
 
                 /* Find the vertices where the surface intersects the cube */
@@ -772,6 +772,16 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
                         }
                     }
                 }
+
+                if(fabs(cell.val[0]) >= truncation || 
+                   fabs(cell.val[1]) >= truncation ||
+                   fabs(cell.val[2]) >= truncation || 
+                   fabs(cell.val[3]) >= truncation || 
+                   fabs(cell.val[4]) >= truncation || 
+                   fabs(cell.val[5]) >= truncation ||
+                   fabs(cell.val[6]) >= truncation ||
+                   fabs(cell.val[7]) >= truncation)
+                        continue;
 
                 // push face indices
                 for (int i = 0; triangle_table[cubeindex][i] != -1; ++i)

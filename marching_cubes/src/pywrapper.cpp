@@ -123,7 +123,7 @@ PyObject* marching_cubes(PyArrayObject* arr, double isovalue, double truncation)
 
 
 PyObject* marching_cubes_color_func(PyObject* lower, PyObject* upper,
-    int numx, int numy, int numz, PyObject* pyfunc_sdf, PyObject* pyfunc_r, PyObject* pyfunc_g, PyObject* pyfunc_b, double isovalue)
+    int numx, int numy, int numz, PyObject* pyfunc_sdf, PyObject* pyfunc_r, PyObject* pyfunc_g, PyObject* pyfunc_b, double isovalue, double truncation)
 {
     std::vector<double> vertices;
     std::vector<size_t> polygons;
@@ -192,7 +192,7 @@ PyObject* marching_cubes_color_func(PyObject* lower, PyObject* upper,
 
     
     // Marching cubes.
-    mc::marching_cubes_color(lower_, upper_, numx, numy, numz, pyfunc_to_cfunc_sdf, pyfunc_to_cfunc_color, isovalue, vertices, polygons);
+    mc::marching_cubes_color(lower_, upper_, numx, numy, numz, pyfunc_to_cfunc_sdf, pyfunc_to_cfunc_color, isovalue, truncation, vertices, polygons);
     
     // Copy the result to two Python ndarrays.
     npy_intp size_vertices = vertices.size();
@@ -214,7 +214,7 @@ PyObject* marching_cubes_color_func(PyObject* lower, PyObject* upper,
 }
 
 
-PyObject* marching_cubes_color(PyArrayObject* arr_sdf, PyArrayObject* arr_color, double isovalue)
+PyObject* marching_cubes_color(PyArrayObject* arr_sdf, PyArrayObject* arr_color, double isovalue, double truncation)
 {
     if(PyArray_NDIM(arr_sdf) != 3)
         throw std::runtime_error("Only three-dimensional arrays are supported (SDF).");
@@ -256,7 +256,7 @@ PyObject* marching_cubes_color(PyArrayObject* arr_sdf, PyArrayObject* arr_color,
     };
 
     // Marching cubes.
-    mc::marching_cubes_color(lower, upper, numx, numy, numz, pyarray_to_cfunc_sdf, pyarray_to_cfunc_color, isovalue, vertices, polygons);
+    mc::marching_cubes_color(lower, upper, numx, numy, numz, pyarray_to_cfunc_sdf, pyarray_to_cfunc_color, isovalue, truncation, vertices, polygons);
 
     // Copy the result to two Python ndarrays.
     npy_intp size_vertices = vertices.size();

@@ -16,8 +16,8 @@ np.import_array()
 cdef extern from "pywrapper.h":
     cdef object c_marching_cubes "marching_cubes"(np.ndarray, double, double) except +
     cdef object c_marching_cubes_func "marching_cubes_func"(tuple, tuple, int, int, int, object, double, double) except +
-    cdef object c_marching_cubes_color "marching_cubes_color"(np.ndarray, np.ndarray, double) except +
-    cdef object c_marching_cubes_color_func "marching_cubes_color_func"(tuple, tuple, int, int, int, object, object, object, object, double) except +
+    cdef object c_marching_cubes_color "marching_cubes_color"(np.ndarray, np.ndarray, double, double) except +
+    cdef object c_marching_cubes_color_func "marching_cubes_color_func"(tuple, tuple, int, int, int, object, object, object, object, double, double) except +
 
 
 def marching_cubes(np.ndarray volume, float isovalue, float truncation):
@@ -43,15 +43,15 @@ def marching_cubes_func(tuple lower, tuple upper, int numx, int numy, int numz, 
 
 
 
-def marching_cubes_color(np.ndarray volume_sdf, np.ndarray volume_color, float isovalue):
+def marching_cubes_color(np.ndarray volume_sdf, np.ndarray volume_color, float isovalue, float truncation):
     
-    verts, faces = c_marching_cubes_color(volume_sdf, volume_color, isovalue)
+    verts, faces = c_marching_cubes_color(volume_sdf, volume_color, isovalue, truncation)
     verts.shape = (-1, 6)
     faces.shape = (-1, 3)
     return verts, faces
 
 
-def marching_cubes_color_func(tuple lower, tuple upper, int numx, int numy, int numz, object f_sdf, object f_color_r, object f_color_g, object f_color_b, double isovalue):
+def marching_cubes_color_func(tuple lower, tuple upper, int numx, int numy, int numz, object f_sdf, object f_color_r, object f_color_g, object f_color_b, double isovalue, double truncation):
     
     if any(l_i >= u_i for l_i, u_i in zip(lower, upper)):
         raise ValueError("lower coordinates cannot be larger than upper coordinates")
@@ -59,7 +59,7 @@ def marching_cubes_color_func(tuple lower, tuple upper, int numx, int numy, int 
     if numx < 2 or numy < 2 or numz < 2:
         raise ValueError("numx, numy, numz cannot be smaller than 2")
 
-    verts, faces = c_marching_cubes_color_func(lower, upper, numx, numy, numz, f_sdf, f_color_r, f_color_g, f_color_b, isovalue)
+    verts, faces = c_marching_cubes_color_func(lower, upper, numx, numy, numz, f_sdf, f_color_r, f_color_g, f_color_b, isovalue, truncation)
     verts.shape = (-1, 6)
     faces.shape = (-1, 3)
     return verts, faces

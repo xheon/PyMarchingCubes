@@ -10,6 +10,9 @@
 #include "../../eigen/Eigen/Eigen" // git clone https://gitlab.com/libeigen/eigen.git
 
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
+typedef Eigen::Matrix<double, 3, 1> Vector3d;
+
+const Vector3d FREESPACE_COLOR = Vector3d(0.0, 0.0, 0.0);
 
 namespace mc
 {
@@ -567,7 +570,16 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
     auto VertexInterp = [&](double isolevel, const Vector6d& p1, const Vector6d& p2, double valp1, double valp2)
                                 {
                                     double alpha = (valp2 - isolevel) / (valp2 - valp1);
-                                    return alpha*p1 + (1 - alpha)*p2;
+                                    
+                                    Vector3d pos = alpha * p1.block<3,1>(0,0) + (1 - alpha) * p2.block<3,1>(0,0);
+                                    Vector3d color;
+                                    if (p1.block<3,1>(3,0) == FREESPACE_COLOR) color = p2.block<3,1>(3,0);
+                                    else if (p2.block<3,1>(3,0) == FREESPACE_COLOR) color = p1.block<3,1>(3,0);
+                                    else color = alpha * p1.block<3,1>(3,0) + (1 - alpha) * p2.block<3,1>(3,0);
+                                    Vector6d result;
+                                    result.block<3,1>(0,0) = pos;
+                                    result.block<3,1>(3,0) = color;
+                                    return result;
                                 };
 
     // store intersections of old z plane to avoid duplicated vertices

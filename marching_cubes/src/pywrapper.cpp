@@ -277,3 +277,81 @@ PyObject* marching_cubes_color(PyArrayObject* arr_sdf, PyArrayObject* arr_color,
     
     return res;
 }
+
+
+
+
+PyObject* marching_cubes_super_sampling(PyArrayObject* arrX, PyArrayObject* arrY, PyArrayObject* arrZ, double isovalue)
+{
+    if(PyArray_NDIM(arrX) != 3)
+        throw std::runtime_error("Only three-dimensional arrays are supported.");
+    if(PyArray_NDIM(arrY) != 3)
+        throw std::runtime_error("Only three-dimensional arrays are supported.");
+    if(PyArray_NDIM(arrZ) != 3)
+        throw std::runtime_error("Only three-dimensional arrays are supported.");
+    
+    // Prepare data.
+    npy_intp* shapeX = PyArray_DIMS(arrX);
+    npy_intp* shapeY = PyArray_DIMS(arrY);
+    npy_intp* shapeZ = PyArray_DIMS(arrZ);
+
+    npy_intp shape[3] = {shapeY[0], shapeX[1], shapeX[2]};
+    npy_intp supersamples[3] = {shapeX[0]/shape[0], shapeY[1]/shape[1], shapeZ[2]/shape[2]};
+
+    if(shapeX[2] != shapeY[2] || shapeX[1] != shapeZ[1] || shapeY[0] != shapeZ[0])
+        throw std::runtime_error("X,Y,Z supersampled sdf arrays need to be compatible.");
+
+    if(shapeX[0] != shape[0]*supersamples[0] || shapeY[1] != shape[1]*supersamples[1] || shapeZ[2] != shape[2]*supersamples[2])
+        throw std::runtime_error("X,Y,Z supersampled sdf arrays need to be compatible (not a multiple).");
+
+    std::array<long, 3> lower{0, 0, 0};
+    std::array<long, 3> upper{shape[0]-1, shape[1]-1, shape[2]-1};
+    long numx = upper[0] - lower[0] + 1;
+    long numy = upper[1] - lower[1] + 1;
+    long numz = upper[2] - lower[2] + 1;
+    std::vector<double> vertices;
+    std::vector<size_t> polygons;
+    
+    auto pyarray_to_cfunc = [&](long x, long y, long z) -> double {
+        const npy_intp c[3] = {x * supersamples[0], y, z};
+        return PyArray_SafeGet<double>(arrX, c);
+    };
+
+    auto pyarray_to_cfuncX = [&](long x, long y, long z) -> double {
+        const npy_intp c[3] = {x, y, z};
+        return PyArray_SafeGet<double>(arrX, c);
+    };
+
+    auto pyarray_to_cfuncY = [&](long x, long y, long z) -> double {
+        const npy_intp c[3] = {x, y, z};
+        return PyArray_SafeGet<double>(arrY, c);
+    };
+
+    auto pyarray_to_cfuncZ = [&](long x, long y, long z) -> double {
+        const npy_intp c[3] = {x, y, z};
+        return PyArray_SafeGet<double>(arrZ, c);
+    };
+
+    // Marching cubes.
+    mc::marching_cubes_super_sampling(lower, upper, numx, numy, numz, supersamples[0], supersamples[1], supersamples[2], pyarray_to_cfunc, pyarray_to_cfuncX, pyarray_to_cfuncY, pyarray_to_cfuncZ, isovalue,
+                        vertices, polygons);
+    
+    // Copy the result to two Python ndarrays.
+    npy_intp size_vertices = vertices.size();
+    npy_intp size_polygons = polygons.size();
+    PyArrayObject* verticesarr = reinterpret_cast<PyArrayObject*>(PyArray_SimpleNew(1, &size_vertices, PyArray_DOUBLE));
+    PyArrayObject* polygonsarr = reinterpret_cast<PyArrayObject*>(PyArray_SimpleNew(1, &size_polygons, PyArray_ULONG));
+    
+    std::vector<double>::const_iterator it = vertices.begin();
+    for(int i=0; it!=vertices.end(); ++i, ++it)
+        *reinterpret_cast<double*>(PyArray_GETPTR1(verticesarr, i)) = *it;
+    std::vector<size_t>::const_iterator it2 = polygons.begin();
+    for(int i=0; it2!=polygons.end(); ++i, ++it2)
+        *reinterpret_cast<unsigned long*>(PyArray_GETPTR1(polygonsarr, i)) = *it2;
+    
+    PyObject* res = Py_BuildValue("(O,O)", verticesarr, polygonsarr);
+    Py_XDECREF(verticesarr);
+    Py_XDECREF(polygonsarr);
+    
+    return res;
+}

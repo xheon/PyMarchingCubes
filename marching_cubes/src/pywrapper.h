@@ -16,4 +16,7 @@ PyObject* marching_cubes_color(PyArrayObject* arr_sdf, PyArrayObject* arr_color,
 PyObject* marching_cubes_color_func(PyObject* lower, PyObject* upper,
     int numx, int numy, int numz, PyObject* f_sdf, PyObject* f_color_r, PyObject* f_color_g, PyObject* f_color_b, double isovalue);
 
+
+PyObject* marching_cubes_super_sampling(PyArrayObject* arrX, PyArrayObject* arrY, PyArrayObject* arrZ, double isovalue);
+
 #endif // _PYWRAPPER_H

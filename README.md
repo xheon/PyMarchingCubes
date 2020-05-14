@@ -15,6 +15,17 @@ Basically, it is called with ``` marching_cubes_color(sdf_volume, rgb_volume, is
 
 The export functions for obj and off files are adapted accordingly to handle the vertex colors.
 
+
+### Super sampling along the edges
+In case you are using a truncated signed distance function, you might miss the correct zero-crossing because of undersampling. Increasing the sample volume growes cubically, instead one can also subsample along the edges of a coarser volume to find a better approximation of the zero-crossing.
+This subsampling of the edges is achieved by sampling along the x,y,z axis independently with higher resolution (e.g. you sample 100x10x10 for the edges along the x axis).
+The computational cost grow linear with the number of subsamples (e.g. 10 subsamples result in 30 times more samples that you have to provide).
+A modified marching cubes implementation can be called via ``` marching_cubes_super_sampling(sdf_x, sdf_y, sdf_z, iso_level) ```.
+Have a look at the sphere example.
+
+![PyMarchingCubes TSDF Sphere](images/mc_super_sampling.jpg "Marching cubes on a TSDF.")
+
+
 Other than that, this repository is the same as the original (https://github.com/pmneila/PyMCubes).
 
 ## Installation

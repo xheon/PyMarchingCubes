@@ -18,7 +18,7 @@ cdef extern from "pywrapper.h":
     cdef object c_marching_cubes_func "marching_cubes_func"(tuple, tuple, int, int, int, object, double) except +
     cdef object c_marching_cubes_color "marching_cubes_color"(np.ndarray, np.ndarray, double) except +
     cdef object c_marching_cubes_color_func "marching_cubes_color_func"(tuple, tuple, int, int, int, object, object, object, object, double) except +
-
+    cdef object c_marching_cubes_super_sampling "marching_cubes_super_sampling"(np.ndarray, np.ndarray, np.ndarray, double) except +
 
 def marching_cubes(np.ndarray volume, float isovalue):
     
@@ -26,7 +26,13 @@ def marching_cubes(np.ndarray volume, float isovalue):
     verts.shape = (-1, 3)
     faces.shape = (-1, 3)
     return verts, faces
-
+    
+def marching_cubes_super_sampling(np.ndarray volumeX, np.ndarray volumeY, np.ndarray volumeZ, float isovalue):
+    
+    verts, faces = c_marching_cubes_super_sampling(volumeX, volumeY, volumeZ, isovalue)
+    verts.shape = (-1, 3)
+    faces.shape = (-1, 3)
+    return verts, faces
 
 def marching_cubes_func(tuple lower, tuple upper, int numx, int numy, int numz, object f, double isovalue):
     
@@ -50,7 +56,6 @@ def marching_cubes_color(np.ndarray volume_sdf, np.ndarray volume_color, float i
     faces.shape = (-1, 3)
     return verts, faces
 
-
 def marching_cubes_color_func(tuple lower, tuple upper, int numx, int numy, int numz, object f_sdf, object f_color_r, object f_color_g, object f_color_b, double isovalue):
     
     if any(l_i >= u_i for l_i, u_i in zip(lower, upper)):
@@ -63,3 +68,5 @@ def marching_cubes_color_func(tuple lower, tuple upper, int numx, int numy, int 
     verts.shape = (-1, 6)
     faces.shape = (-1, 3)
     return verts, faces
+
+

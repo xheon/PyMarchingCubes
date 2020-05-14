@@ -815,6 +815,11 @@ void marching_cubes_super_sampling(const vector3& lower, const vector3& upper,
     double dz = (upper[2] - lower[2]) / (numz - 1.0);
 
 
+
+    double scale_x = (numx - 1.0) / ( numx + (numx - 1) * superx - 1.0 ); // map super sampling coordinates back to actual sampling coordinates
+    double scale_y = (numy - 1.0) / ( numy + (numy - 1) * supery - 1.0 );
+    double scale_z = (numz - 1.0) / ( numz + (numz - 1) * superz - 1.0 );
+
     //auto coord_mapper = [&](int x, int y, int z) { return Eigen::Vector3d( lower[0] + x * dx, lower[1] + y * dy, lower[2] + z * dz ); }; 
     auto coord_mapper = [&](int x, int y, int z) { return Eigen::Vector3d( x,y,z ); }; 
     auto push_vertex = [&] (Eigen::Vector3d xyz) {int id = vertices.size()/3; vertices.push_back(xyz.x()); vertices.push_back(xyz.y()); vertices.push_back(xyz.z()); return id;};
@@ -860,19 +865,17 @@ void marching_cubes_super_sampling(const vector3& lower, const vector3& upper,
                                             if(p2.x() == min_x) val_prev=valp2;
                                             int y = p1.y();
                                             int z = p1.z();
-
-                                            for(int i=1; i<superx+1; ++i) // could do interval halfing / binary search
+                                            for(int i=1; i<=superx+1; ++i) // could do interval halfing / binary search
                                             {
                                                 // find isolevel point
-                                                int x = min_x*superx + i;
+                                                int x = min_x*(superx+1) + i;
                                                 double val = (double)f_superX(x, y, z);
-                                                //if(val == val_prev) continue;
                                                 if (sign(val-isolevel) != sign(val_prev-isolevel) || (fabs(val-isolevel)==0.0 && fabs(val_prev-isolevel)!=0.0 )) // zero crossing
                                                 {
                                                     valp1_ss = val_prev;
                                                     valp2_ss = val;
-                                                    p1_ss.x() = (x - 1) / double(superx);
-                                                    p2_ss.x() = x / double(superx);
+                                                    p1_ss.x() = (x - 1) * scale_x;
+                                                    p2_ss.x() = x * scale_x;
                                                     break;
                                                 }
                                                 val_prev = val;
@@ -886,18 +889,17 @@ void marching_cubes_super_sampling(const vector3& lower, const vector3& upper,
                                             if(p2.y() == min_y) val_prev=valp2;
                                             int x = p1.x();
                                             int z = p1.z();
-                                            for(int i=1; i<supery+1; ++i) // could do interval halfing / binary search
+                                            for(int i=1; i<=supery+1; ++i) // could do interval halfing / binary search
                                             {
                                                 // find isolevel point
-                                                int y = min_y*supery + i;
+                                                int y = min_y*(supery+1) + i;
                                                 double val = (double)f_superY(x, y, z);
-                                                //if(val == val_prev) continue;
                                                 if (sign(val-isolevel) != sign(val_prev-isolevel) || (fabs(val-isolevel)==0.0 && fabs(val_prev-isolevel)!=0.0 )) // zero crossing
                                                 {
                                                     valp1_ss = val_prev;
                                                     valp2_ss = val;
-                                                    p1_ss.y() = (y - 1) / double(supery);
-                                                    p2_ss.y() = y / double(supery);
+                                                    p1_ss.y() = (y - 1) * scale_y;
+                                                    p2_ss.y() = y * scale_y;
                                                     break;
                                                 }
                                                 val_prev = val;
@@ -911,18 +913,17 @@ void marching_cubes_super_sampling(const vector3& lower, const vector3& upper,
                                             if(p2.z() == min_z) val_prev=valp2;
                                             int x = p1.x();
                                             int y = p1.y();
-                                            for(int i=1; i<superz+1; ++i) // could do interval halfing / binary search
+                                            for(int i=1; i<=superz+1; ++i) // could do interval halfing / binary search
                                             {
                                                 // find isolevel point
-                                                int z = min_z*superz + i;
+                                                int z = min_z*(superz+1) + i;
                                                 double val = (double)f_superZ(x, y, z);
-                                                //if(val == val_prev) continue;
                                                 if (sign(val-isolevel) != sign(val_prev-isolevel) || (fabs(val-isolevel)==0.0 && fabs(val_prev-isolevel)!=0.0 )) // zero crossing
                                                 {
                                                     valp1_ss = val_prev;
                                                     valp2_ss = val;
-                                                    p1_ss.z() = (z - 1) / double(superz);
-                                                    p2_ss.z() = z / double(superz);
+                                                    p1_ss.z() = (z - 1) * scale_z;
+                                                    p2_ss.z() = z * scale_z;
                                                     break;
                                                 }
                                                 val_prev = val;

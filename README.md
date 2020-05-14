@@ -18,8 +18,8 @@ The export functions for obj and off files are adapted accordingly to handle the
 
 ### Super sampling along the edges
 In case you are using a truncated signed distance function, you might miss the correct zero-crossing because of undersampling. Increasing the sample volume grows cubically, instead one can also subsample along the edges of a coarser volume to find a better approximation of the zero-crossing.
-This subsampling of the edges is achieved by sampling along the x,y,z axis independently with higher resolution (e.g., you sample 101x10x10 for the edges along the x axis (note it is 100+1!).
-The computational cost grow linear with the number of subsamples (e.g. 10 subsamples result in 30 times more samples that you have to provide (since you need 10 times more samples per axis)).
+This subsampling of the edges is achieved by sampling along the x,y,z axis independently with higher resolution (e.g., you sample (dim_x + (dim_x-1)*edge_sampling, dim_y, dim_z) for the edges along the x axis).
+The computational cost grow linear with the number of subsamples (e.g. 10 subsamples result in ~30 times more samples that you have to provide (since you need 10 times more samples per axis)).
 A modified marching cubes implementation can be called via ``` marching_cubes_super_sampling(sdf_x, sdf_y, sdf_z, iso_level) ```.
 Have a look at the sphere example.
 

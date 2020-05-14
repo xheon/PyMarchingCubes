@@ -296,13 +296,17 @@ PyObject* marching_cubes_super_sampling(PyArrayObject* arrX, PyArrayObject* arrY
     npy_intp* shapeZ = PyArray_DIMS(arrZ);
 
     npy_intp shape[3] = {shapeY[0], shapeX[1], shapeX[2]};
-    npy_intp supersamples[3] = {(shapeX[0]-1)/shape[0], (shapeY[1]-1)/shape[1], (shapeZ[2]-1)/shape[2]};
+    npy_intp supersamples[3] = {    (shapeX[0]-shape[0]) / (shape[0]-1), // samples along the edge (between two voxel nodes)
+                                    (shapeY[1]-shape[1]) / (shape[1]-1),
+                                    (shapeZ[2]-shape[2]) / (shape[2]-1)};
 
     if(shapeX[2] != shapeY[2] || shapeX[1] != shapeZ[1] || shapeY[0] != shapeZ[0])
         throw std::runtime_error("X,Y,Z supersampled sdf arrays need to be compatible.");
 
-    if(shapeX[0]-1 != shape[0]*supersamples[0] || shapeY[1]-1 != shape[1]*supersamples[1] || shapeZ[2]-1 != shape[2]*supersamples[2])
-        throw std::runtime_error("X,Y,Z supersampled sdf arrays need to be compatible (must be a multiple of the actual dimension +1 !).");
+    if(     shapeX[0] != shape[0] + (shape[0]-1)*supersamples[0] 
+        ||  shapeY[1] != shape[1] + (shape[1]-1)*supersamples[1]
+        ||  shapeZ[2] != shape[2] + (shape[2]-1)*supersamples[2])
+        throw std::runtime_error("X,Y,Z supersampled sdf arrays need to be compatible (must be dim + supersamples*(dim-1) !).");
 
     std::array<long, 3> lower{0, 0, 0};
     std::array<long, 3> upper{shape[0]-1, shape[1]-1, shape[2]-1};
@@ -313,7 +317,7 @@ PyObject* marching_cubes_super_sampling(PyArrayObject* arrX, PyArrayObject* arrY
     std::vector<size_t> polygons;
     
     auto pyarray_to_cfunc = [&](long x, long y, long z) -> double {
-        const npy_intp c[3] = {x * supersamples[0], y, z};
+        const npy_intp c[3] = {x * (supersamples[0]+1), y, z};
         return PyArray_SafeGet<double>(arrX, c);
     };
 

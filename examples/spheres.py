@@ -30,6 +30,8 @@ mcubes.export_off(vertices_color, triangles_color, "sphere_color.off")
 
 print("Example 3: TSDF isosurface with super resolution...")
 
+dim = 100
+
 # Create a data volume (100 x 100 x 100)
 def sphere_tsdf(xyz, x_scale, y_scale, z_scale):
     X, Y, Z = xyz
@@ -41,14 +43,18 @@ def sphere_tsdf(xyz, x_scale, y_scale, z_scale):
     return np.clip(sdf, -truncation, truncation)
 
 # Extract the 0-isosurface
-sdf = sphere_tsdf(np.mgrid[:100, :100, :100], 0.01, 0.01, 0.01)
+sdf = sphere_tsdf(np.mgrid[:dim, :dim, :dim], 1.0/(dim-1.0),1.0/(dim-1.0),1.0/(dim-1.0))
 vertices, triangles = mcubes.marching_cubes(sdf, 0)
 mcubes.export_off(vertices, triangles, "sphere_tsdf_without_super_res.off")
 
 # Extract the 0-isosurface with super res
-sdf_x = sphere_tsdf(np.mgrid[:1000 + 1, :100, :100], 0.001, 0.01, 0.01) ## generates 10x more samples in x
-sdf_y = sphere_tsdf(np.mgrid[:100, :1000 + 1, :100], 0.01, 0.001, 0.01) ## generates 10x more samples in y
-sdf_z = sphere_tsdf(np.mgrid[:100, :100, :1000 + 1], 0.01, 0.01, 0.001) ## generates 10x more samples in z
+
+edges = dim-1
+n_edge_samples = 10
+supersamples = dim + edges * n_edge_samples
+sdf_x = sphere_tsdf(np.mgrid[:supersamples, :dim, :dim], 1.0/(supersamples-1.0), 1.0/(dim-1.0), 1.0/(dim-1.0)) ## generates 10x more samples in x
+sdf_y = sphere_tsdf(np.mgrid[:dim, :supersamples, :dim], 1.0/(dim-1.0), 1.0/(supersamples-1.0), 1.0/(dim-1.0)) ## generates 10x more samples in y
+sdf_z = sphere_tsdf(np.mgrid[:dim, :dim, :supersamples], 1.0/(dim-1.0), 1.0/(dim-1.0), 1.0/(supersamples-1.0)) ## generates 10x more samples in z
 vertices, triangles = mcubes.marching_cubes_super_sampling(sdf_x, sdf_y, sdf_z, 0)
 mcubes.export_off(vertices, triangles, "sphere_tsdf_super_res.off")
 

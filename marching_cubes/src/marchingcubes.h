@@ -87,7 +87,7 @@ void marching_cubes(const vector3& lower, const vector3& upper,
 	//  /
 	// x
 	// f(p1) = valp1
-    auto VertexInterp = [&](double isolevel, const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, double valp1, double valp2)
+    auto VertexInterp = [&](double isolevel, const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, double valp1, double valp2) -> Eigen::Vector3d
                                 {
                                     double alpha = (valp2 - isolevel) / (valp2 - valp1);
                                     return alpha*p1 + (1 - alpha)*p2;
@@ -552,7 +552,7 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
 	//  /
 	// x
 	// f(p1) = valp1
-    auto VertexInterp = [&](double isolevel, const Vector6d& p1, const Vector6d& p2, double valp1, double valp2)
+    auto VertexInterp = [&](double isolevel, const Vector6d& p1, const Vector6d& p2, double valp1, double valp2) -> Vector6d
                                 {
                                     double alpha = (valp2 - isolevel) / (valp2 - valp1);
                                     return alpha*p1 + (1 - alpha)*p2;
@@ -836,7 +836,7 @@ void marching_cubes_super_sampling(const vector3& lower, const vector3& upper,
 	//  /
 	// x
 	// f(p1) = valp1
-    auto VertexInterp = [&](double isolevel, const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, double valp1, double valp2)
+    auto VertexInterp = [&](double isolevel, const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, double valp1, double valp2) -> Eigen::Vector3d
                                 {
                                     bool edge_in_x_dir = p1.x() != p2.x() && p1.y() == p2.y() && p1.z() == p2.z();
                                     bool edge_in_y_dir = p1.x() == p2.x() && p1.y() != p2.y() && p1.z() == p2.z();

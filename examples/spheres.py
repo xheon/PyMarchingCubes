@@ -46,9 +46,9 @@ vertices, triangles = mcubes.marching_cubes(sdf, 0)
 mcubes.export_off(vertices, triangles, "sphere_tsdf_without_super_res.off")
 
 # Extract the 0-isosurface with super res
-sdf_x = sphere_tsdf(np.mgrid[:1000, :100, :100], 0.001, 0.01, 0.01) ## generates 10x more samples in x
-sdf_y = sphere_tsdf(np.mgrid[:100, :1000, :100], 0.01, 0.001, 0.01) ## generates 10x more samples in y
-sdf_z = sphere_tsdf(np.mgrid[:100, :100, :1000], 0.01, 0.01, 0.001) ## generates 10x more samples in z
+sdf_x = sphere_tsdf(np.mgrid[:1000 + 1, :100, :100], 0.001, 0.01, 0.01) ## generates 10x more samples in x
+sdf_y = sphere_tsdf(np.mgrid[:100, :1000 + 1, :100], 0.01, 0.001, 0.01) ## generates 10x more samples in y
+sdf_z = sphere_tsdf(np.mgrid[:100, :100, :1000 + 1], 0.01, 0.01, 0.001) ## generates 10x more samples in z
 vertices, triangles = mcubes.marching_cubes_super_sampling(sdf_x, sdf_y, sdf_z, 0)
 mcubes.export_off(vertices, triangles, "sphere_tsdf_super_res.off")
 

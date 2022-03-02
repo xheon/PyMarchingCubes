@@ -560,9 +560,27 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
 
                                     Vector3d pos = alpha * p1.block<3,1>(0,0) + (1 - alpha) * p2.block<3,1>(0,0);
                                     Vector3d color;
-                                    if (p1.block<3,1>(3,0) == FREESPACE_COLOR) color = p2.block<3,1>(3,0);
-                                    else if (p2.block<3,1>(3,0) == FREESPACE_COLOR) color = p1.block<3,1>(3,0);
-                                    else color = alpha * p1.block<3,1>(3,0) + (1 - alpha) * p2.block<3,1>(3,0);
+
+
+                                    // nearest neighbor
+                                    if (abs(p1.block<3,1>(0,0) - pos) < abs(p2.block<3,1>(0,0) - pos)) 
+                                    {
+                                        color = p1.block<3,1>(3,0);
+                                    }
+                                    else
+                                    {
+                                        color = p2.block<3,1>(3,0);
+                                    }
+
+                                    // if (p1.block<3,1>(3,0) == FREESPACE_COLOR) {
+                                    //     color = p2.block<3,1>(3,0);
+                                    // }
+                                    // else if (p2.block<3,1>(3,0) == FREESPACE_COLOR) {
+                                    //     color = p1.block<3,1>(3,0);
+                                    // }
+                                    // else {
+                                        
+                                    // }
                                     Vector6d result;
                                     result.block<3,1>(0,0) = pos;
                                     result.block<3,1>(3,0) = color;

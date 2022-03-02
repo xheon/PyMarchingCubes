@@ -60,7 +60,7 @@ def extensions():
 
 setup(
     name="PyMarchingCubes",
-    version="0.0.2",
+    version="0.0.3",
     description="Marching cubes for Python",
     author="Justus Thies (PyMCubes: Pablo Márquez Neila)",
     url="https://github.com/JustusThies/PyMarchingCubes",

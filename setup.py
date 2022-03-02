@@ -38,7 +38,7 @@ def extensions():
 
     numpy_include_dir = numpy.get_include()
 
-    mcubes_module = Extension(
+    marching_cubes_module = Extension(
         "marching_cubes._mcubes",
         [
             "marching_cubes/src/_mcubes.pyx",
@@ -56,11 +56,11 @@ def extensions():
         ],
     )
 
-    return cythonize([mcubes_module])
+    return cythonize([marching_cubes_module])
 
 setup(
     name="PyMarchingCubes",
-    version="0.0.1",
+    version="0.0.2",
     description="Marching cubes for Python",
     author="Justus Thies (PyMCubes: Pablo Márquez Neila)",
     url="https://github.com/JustusThies/PyMarchingCubes",

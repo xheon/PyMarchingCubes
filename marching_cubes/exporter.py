@@ -6,11 +6,15 @@ def export_obj(vertices, triangles, filename):
     """
     Exports a mesh in the (.obj) format.
     """
+    print('export mesh: ', vertices.shape)
     
     with open(filename, 'w') as fh:
-        
-        for v in vertices:
-            fh.write("v {} {} {}\n".format(*v))
+        if (vertices.shape[1]==6):
+            for v in vertices:
+                fh.write("v {} {} {} {} {} {}\n".format(*v))
+        else:
+            for v in vertices:
+                fh.write("v {} {} {}\n".format(*v))
             
         for f in triangles:
             fh.write("f {} {} {}\n".format(*(f + 1)))
@@ -22,11 +26,18 @@ def export_off(vertices, triangles, filename):
     """
     
     with open(filename, 'w') as fh:
-        fh.write('OFF\n')
+        if (vertices.shape[1]==6):
+            fh.write('COFF\n')
+        else:
+            fh.write('OFF\n')
         fh.write('{} {} 0\n'.format(len(vertices), len(triangles)))
 
-        for v in vertices:
-            fh.write("{} {} {}\n".format(*v))
+        if (vertices.shape[1]==6):
+            for v in vertices:
+                fh.write("{} {} {} {} {} {}\n".format(*v))
+        else:
+            for v in vertices:
+                fh.write("{} {} {}\n".format(*v))
             
         for f in triangles:
             fh.write("3 {} {} {}\n".format(*f))
@@ -43,7 +54,7 @@ def export_mesh(vertices, triangles, filename, mesh_name="mcubes_mesh"):
     
     mesh = collada.Collada()
     
-    vert_src = collada.source.FloatSource("verts-array", vertices, ('X','Y','Z'))
+    vert_src = collada.source.FloatSource("verts-array", vertices[:,0:3], ('X','Y','Z'))
     geom = collada.geometry.Geometry(mesh, "geometry0", mesh_name, [vert_src])
     
     input_list = collada.source.InputList()

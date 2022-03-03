@@ -563,7 +563,13 @@ void marching_cubes_color(const vector3& lower, const vector3& upper,
 
 
                                     // nearest neighbor
-                                    if (abs(p1.block<3,1>(0,0) - pos) < abs(p2.block<3,1>(0,0) - pos)) 
+                                    Vector3d dist1 = p1.block<3,1>(0,0) - pos;
+                                    Vector3d dist2 = p2.block<3,1>(0,0) - pos;
+
+                                    double length1 = dist1.norm();
+                                    double length2 = dist2.norm();
+
+                                    if (length1 < length2)
                                     {
                                         color = p1.block<3,1>(3,0);
                                     }
